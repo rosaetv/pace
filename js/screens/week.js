@@ -50,7 +50,9 @@ function dayRow(date) {
   return `
     <section class="card week-day ${past ? "is-past" : ""}">
       <div class="week-day-head">
-        <h2 class="week-day-title">${formatDate(date, "day")}${date === todayISO() ? ` <span class="badge tint-lilac">Today</span>` : ""}</h2>
+        <h2 class="week-day-title">${formatDate(date, "day")}${date === todayISO() ? ` <span class="badge tint-lilac">Today</span>` : ""}${
+          proposal.overloaded?.includes(date) && !past ? ` <span class="badge tint-butter">Full day</span>` : ""
+        }</h2>
         <div class="chips">
           ${
             isWeekend
@@ -135,7 +137,7 @@ function draw(view, start) {
     ${weekDates(start).map(dayRow).join("")}
     ${
       proposal.unplaced.length
-        ? `<p class="small muted">${proposal.unplaced.map((u) => esc(ctx.tasks.find((t) => t.id === u.taskId)?.name || u.taskId)).join(", ")} didn't fit. ${proposal.unplaced.length === 1 ? "It stays" : "They stay"} in "Could do" if you have energy.</p>`
+        ? `<p class="small muted">${proposal.unplaced.map((u) => esc(ctx.tasks.find((t) => t.id === u.taskId)?.name || u.taskId)).join(", ")} would overload a day this week, so ${proposal.unplaced.length === 1 ? "it stays" : "they stay"} in "Could do" if you have energy. Mark a task as non-negotiable to always give it a day.</p>`
         : ""
     }
     ${

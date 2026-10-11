@@ -124,46 +124,84 @@ export function planWeek(start, from, energy, ctx) {
       let need = Math.max(0, target - done.length - dismissals(task.id, ctx, start, end).length - pinned.length);
       if (isGroupFollower(task, ctx, energy) || groupSatisfied(task, ctx, start, end, energy)) need = 0;
       const candidates = days.filter((d) => allowedOn(task, infos[d]) && !done.includes(d) && !pinned.includes(d));
-      return { task, done, pinned, need, candidates };
+      // Para lo no negociable, último recurso: cualquier día libre de la semana (aunque rompa una regla).
+      const anyDay = days.filter((d) => !done.includes(d) && !pinned.includes(d));
+      return { task, done, pinned, need, candidates, anyDay };
     })
     .filter((x) => x.need > 0 || x.pinned.length)
-    // Primero las más pesadas (gym) y, entre iguales, las más difíciles de acomodar.
-    .sort((a, b) => (b.task.effort || 1) - (a.task.effort || 1) || a.candidates.length - a.need - (b.candidates.length - b.need));
+    // Primero lo no negociable; luego lo más pesado (gym); entre iguales, lo más difícil de acomodar.
+    .sort(
+      (a, b) =>
+        Number(Boolean(b.task.mustDo)) - Number(Boolean(a.task.mustDo)) ||
+        (b.task.effort || 1) - (a.task.effort || 1) ||
+        a.candidates.length - a.need - (b.candidates.length - b.need),
+    );
 
   const assignments = {};
   const unplaced = [];
+  const forced = []; // no negociables que tuvieron que pasarse de la capacidad o de una regla
 
-  for (const { task, done, pinned, need, candidates } of flexible) {
+  // Mejor combinación de exactamente "size" días. Opciones: respetar capacidad y descanso.
+  function search(task, cands, size, base, { capacity = true, rest = true } = {}) {
     const effort = task.effort || 1;
-    const minRest = task.constraints?.minRestDays || 0;
+    const minRest = rest ? task.constraints?.minRestDays || 0 : 0;
+    const preferred = task.constraints?.preferredDays || [];
     let best = null;
-
-    for (let size = Math.min(need, candidates.length); size > 0 && !best; size--) {
-      for (const combo of combinations(candidates, size)) {
-        if (!respectsRestWith([...done, ...pinned], combo, minRest)) continue;
-        // Tope duro: ningún día recibe más de lo que aguanta. Lo que no cabe queda como "Could do".
-        if (combo.some((d) => load[d] + effort > dayCapacity(infos[d], ctx.settings))) continue;
-        let score = 0;
-        for (const d of combo) {
-          const info = infos[d];
-          score += (load[d] + effort) / dayCapacity(info, ctx.settings);
-          if (task.constraints?.gymDay && !info.gym) score += 1.5; // mejor en sus días de gym
-          if (info.office) score += 1.5; // los días de oficina, lo menos posible
-        }
-        // Con empate, lo más pronto posible.
-        score += combo.reduce((s, d) => s + diffDays(from, d), 0) * 0.001;
-        if (!best || score < best.score) best = { combo, score };
+    for (const combo of combinations(cands, size)) {
+      if (!respectsRestWith(base, combo, minRest)) continue;
+      // Tope: ningún día recibe más de lo que aguanta (salvo lo no negociable, como último recurso).
+      if (capacity && combo.some((d) => load[d] + effort > dayCapacity(infos[d], ctx.settings))) continue;
+      let score = 0;
+      for (const d of combo) {
+        const info = infos[d];
+        score += (load[d] + effort) / dayCapacity(info, ctx.settings);
+        if (task.constraints?.gymDay && !info.gym) score += 1.5; // mejor en sus días de gym
+        if (preferred.length && !preferred.includes(info.weekday)) score += 2; // mejor en sus días preferidos
+        if (info.office) score += 1.5; // los días de oficina, lo menos posible
       }
+      // Con empate, lo más pronto posible.
+      score += combo.reduce((sum, d) => sum + diffDays(from, d), 0) * 0.001;
+      if (!best || score < best.score) best = { combo, score };
+    }
+    return best?.combo || null;
+  }
+
+  for (const { task, done, pinned, need, candidates, anyDay } of flexible) {
+    const effort = task.effort || 1;
+    const base = [...done, ...pinned];
+    let combo = null;
+
+    // Normal: lo más que quepa sin pasarse de nada.
+    for (let size = Math.min(need, candidates.length); size > 0 && !combo; size--) {
+      combo = search(task, candidates, size, base);
+      if (combo && combo.length < need && task.mustDo) combo = null; // lo no negociable necesita todas sus veces
     }
 
-    if (best) best.combo.forEach((d) => (load[d] += effort));
-    const dates = [...pinned, ...(best?.combo || [])].sort();
+    // No negociable: se relaja paso a paso hasta que quepa entero.
+    if (task.mustDo && !combo && need > 0) {
+      const steps = [
+        [candidates, { capacity: false }],
+        [candidates, { capacity: false, rest: false }],
+        [anyDay, { capacity: false, rest: false }],
+      ];
+      for (const [cands, opts] of steps) {
+        combo = search(task, cands, Math.min(need, cands.length), base, opts);
+        if (combo) break;
+      }
+      if (combo) forced.push(task.id);
+    }
+
+    if (combo) combo.forEach((d) => (load[d] += effort));
+    const dates = [...pinned, ...(combo || [])].sort();
     if (dates.length) assignments[task.id] = dates;
-    const placed = best ? best.combo.length : 0;
+    const placed = combo ? combo.length : 0;
     if (placed < need) unplaced.push({ taskId: task.id, missing: need - placed });
   }
 
-  return { assignments, unplaced, load };
+  // Días que quedaron por encima de su capacidad (por algo no negociable o movido a mano).
+  const overloaded = days.filter((d) => load[d] > dayCapacity(infos[d], ctx.settings));
+
+  return { assignments, unplaced, load, overloaded, forced };
 }
 
 // Diferencias entre el reparto aceptado y uno nuevo, para pedir luz verde.

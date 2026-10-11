@@ -194,7 +194,7 @@ export function weekDays(ctx) {
 export function proposeWeek(ctx, from, weekDraft, energy) {
   const week = { ...ctx.week, ...weekDraft };
   const cap = week.proposal === "accepted" ? week.energyCap : null;
-  const { assignments, unplaced } = planWeek(ctx.weekStart, from, cap || energy || "full", { ...ctx, week });
+  const { assignments, unplaced, overloaded } = planWeek(ctx.weekStart, from, cap || energy || "full", { ...ctx, week });
   // Lo que ya pasó se queda como estaba.
   const kept = {};
   for (const [id, dates] of Object.entries(ctx.week.assignments || {})) {
@@ -202,7 +202,7 @@ export function proposeWeek(ctx, from, weekDraft, energy) {
     if (past.length) kept[id] = past;
   }
   for (const [id, dates] of Object.entries(assignments)) kept[id] = [...(kept[id] || []), ...dates].sort();
-  return { week: { ...week, assignments: kept }, changes: diffAssignments(ctx.week.assignments || {}, kept, from), unplaced };
+  return { week: { ...week, assignments: kept }, changes: diffAssignments(ctx.week.assignments || {}, kept, from), unplaced, overloaded };
 }
 
 export async function acceptWeek(week) {

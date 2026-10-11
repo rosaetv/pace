@@ -238,6 +238,16 @@ function rulesSection() {
         </div>
         ${weekdayPicker("constraints.forbiddenDays")}
       </div>
+      ${f === "weekly" ? toggle("mustDo", "Non-negotiable", "Always gets a day, even if the week is full.") : ""}
+      ${
+        f === "weekly"
+          ? `<div class="field">
+              <span class="field-label">Preferred days</span>
+              ${weekdayPicker("constraints.preferredDays")}
+              <p class="hint">Pace tries these first. If they don't work that week, it picks another.</p>
+            </div>`
+          : ""
+      }
       ${f === "weekly" ? toggle("constraints.gymDay", "Plan it on gym days", "Uses the gym days from Settings or your weekly plan.") : ""}
       ${f === "weekly" ? stepper("constraints.minRestDays", "Rest days in between", { min: 0, max: 5, hint: "At least this many days between two times." }) : ""}
       ${
