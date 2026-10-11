@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f7f5fb" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Pace" />
+    <title>Pace</title>
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icons/icon-180.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="preload" href="fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="fonts/figtree.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/app.css" />
+    <!-- Íconos Lucide (copia local para funcionar sin internet) -->
+    <script src="vendor/lucide.min.js"></script>
+  </head>
+  <body>
+    <main id="view" class="view"></main>
+
+    <nav class="tabbar" aria-label="Main">
+      <a class="tab" href="#/today" data-tab="today" data-icon="sun" aria-label="Today"></a>
+      <a class="tab" href="#/tasks" data-tab="tasks" data-icon="list-checks" aria-label="Tasks"></a>
+      <a class="tab" href="#/history" data-tab="history" data-icon="calendar-days" aria-label="History"></a>
+      <a class="tab" href="#/settings" data-tab="settings" data-icon="settings-2" aria-label="Settings"></a>
+    </nav>
+
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>

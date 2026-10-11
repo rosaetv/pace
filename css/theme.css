@@ -1,0 +1,131 @@
+/* =========================================================
+   PACE — TEMA VISUAL
+   ---------------------------------------------------------
+   Este es el único archivo que necesitas tocar para cambiar
+   el aspecto de la app. Todo el resto del CSS usa estas
+   variables. Cambia un valor, guarda y recarga la página.
+   Puedes ver todas las piezas juntas en #/styleguide.
+   ========================================================= */
+
+/* ---------- Fuentes (guardadas en /fonts para funcionar sin internet) ---------- */
+@font-face {
+  font-family: "Fraunces";
+  src: url("../fonts/fraunces.woff2") format("woff2");
+  font-weight: 300 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Figtree";
+  src: url("../fonts/figtree.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ---------- Colores base ----------
+     Todo el texto cumple contraste WCAG AA (4,5:1) sobre su fondo.
+     Si cambias un color, revisa el contraste en webaim.org/resources/contrastchecker */
+  --color-bg: #f7f5fb;            /* fondo general (lavanda casi blanco) */
+  --color-surface: #ffffff;       /* tarjetas */
+  --color-surface-2: #f1eef9;     /* chips, inputs, elementos dentro de tarjetas */
+  --color-border: #e8e4f3;        /* bordes sutiles */
+
+  --color-text: #2e2a47;          /* texto principal (tinta violeta oscura) */
+  --color-text-muted: #6b6590;    /* texto secundario */
+  --color-text-faint: #76709a;    /* fechas, ayudas */
+  --color-decor: #cfc9e6;         /* solo decorativo: círculos vacíos, separadores */
+
+  --color-primary: #6a5fd0;       /* lavanda: botón principal, check, selección */
+  --color-on-primary: #ffffff;
+  --color-primary-soft: #eeeafb;  /* fondo suave del primario */
+  --color-primary-deep: #3f3690;  /* texto sobre el fondo suave */
+
+  --color-ink-bar: #2e2a47;       /* barra de pestañas flotante */
+  --color-on-ink-bar: #ffffff;
+  --color-on-ink-bar-muted: #9c97b8;
+
+  /* ---------- Pasteles ----------
+     Cada pastel tiene su fondo (-bg), su texto (-ink) y un texto suave (-ink-2). */
+  --mint-bg: #ddf3ea;   --mint-ink: #1f5242;   --mint-ink-2: #2f6b57;
+  --sky-bg: #e3eefb;    --sky-ink: #24507f;    --sky-ink-2: #3a6ea8;
+  --peach-bg: #fff0e3;  --peach-ink: #7a4318;  --peach-ink-2: #9a5a28;
+  --rose-bg: #fbe6ef;   --rose-ink: #7a2e4f;   --rose-ink-2: #a8466e;
+  --butter-bg: #fff3dc; --butter-ink: #6e4508; --butter-ink-2: #8a5a12;
+  --lilac-bg: #eeeafb;  --lilac-ink: #3f3690;  --lilac-ink-2: #5a50a8;
+  --coral-bg: #fce3df;  --coral-ink: #8e2f22;  --coral-ink-2: #a8442f;
+
+  /* ---------- Energía ---------- */
+  --energy-full: var(--mint-bg);    --energy-full-ink: var(--mint-ink);
+  --energy-high: var(--sky-bg);     --energy-high-ink: var(--sky-ink);
+  --energy-half: var(--peach-bg);   --energy-half-ink: var(--peach-ink);
+  --energy-min: var(--rose-bg);     --energy-min-ink: var(--rose-ink);
+
+  /* ---------- Límites: neutral → amarillo al llegar → rojo al pasar ---------- */
+  --limit-ok: var(--lilac-bg);      --limit-ok-ink: var(--lilac-ink);
+  --limit-at: var(--butter-bg);     --limit-at-ink: var(--butter-ink);
+  --limit-over: var(--coral-bg);    --limit-over-ink: var(--coral-ink);
+
+  /* ---------- Sombras (muy suaves) ---------- */
+  --shadow-card: 0 1px 2px rgba(46, 42, 71, 0.04), 0 8px 24px rgba(46, 42, 71, 0.05);
+  --shadow-float: 0 12px 32px rgba(46, 42, 71, 0.18);
+  --shadow-sheet: 0 -8px 40px rgba(46, 42, 71, 0.16);
+
+  /* ---------- Tipografía ---------- */
+  --font-display: "Fraunces", Georgia, serif;  /* títulos */
+  --font-body: "Figtree", -apple-system, system-ui, sans-serif; /* texto y botones */
+
+  --display-weight: 300;      /* Fraunces Light */
+  --display-soft: 100;        /* 0 = terminaciones afiladas, 100 = redondeadas */
+
+  /* Tamaños relativos al texto base (1rem). En el iPhone, 1rem sigue tu ajuste
+     de "Tamaño del texto". Los px son con el tamaño estándar (16px). */
+  --font-size-xs: 0.75rem;    /* 12px — etiquetas */
+  --font-size-sm: 0.875rem;   /* 14px — texto secundario */
+  --font-size-md: 1rem;       /* 16px — texto normal */
+  --font-size-lg: 1.25rem;    /* 20px — títulos de tarjeta */
+  --font-size-xl: 1.75rem;    /* 28px — títulos de pantalla */
+  --font-size-xxl: 2.25rem;   /* 36px — saludo */
+
+  --line-height-tight: 1.15;
+  --line-height-normal: 1.45;
+
+  /* ---------- Espaciados ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --page-gutter: 20px;
+
+  /* ---------- Formas ---------- */
+  --radius-sm: 12px;
+  --radius-md: 18px;    /* filas de tareas, botones */
+  --radius-lg: 24px;    /* tarjetas grandes */
+  --radius-xl: 32px;    /* hojas que suben desde abajo */
+  --radius-full: 999px;
+
+  /* ---------- Tamaños táctiles ---------- */
+  --tap-min: 44px;
+  --btn-height: 52px;
+  --check-size: 28px;
+  --tabbar-height: 64px;
+
+  /* ---------- Movimiento ---------- */
+  --transition-fast: 160ms ease;
+  --transition-soft: 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ---------- Ajustes solo para el teléfono ---------- */
+@media (pointer: coarse) {
+  /* El texto base sigue tu ajuste de iOS (Ajustes → Pantalla y brillo →
+     Tamaño del texto). Si prefieres un tamaño fijo, borra esta regla. */
+  html {
+    font: -apple-system-body;
+  }
+}

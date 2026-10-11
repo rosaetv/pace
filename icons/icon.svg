@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Pace: tres puntos de distinto tamaño, como una batería orgánica que sube a tu ritmo -->
+  <rect width="1024" height="1024" fill="#FFF4EA"/>
+  <circle cx="228" cy="584" r="72" fill="#CFC8F3"/>
+  <circle cx="440" cy="552" r="104" fill="#9C93E5"/>
+  <circle cx="724" cy="512" r="144" fill="#6A5FD0"/>
+</svg>
