@@ -69,18 +69,30 @@ function weeklyGoals(ctxNow, completionsByWeek, startedAt) {
 
   const rows = tasks.map((task) => {
     const target = task.streak.target || 1;
+    // La primera semana puede ser incompleta (si empezaste a mitad): la meta se ajusta a los días que tuviste.
+    const targetFor = (start) => {
+      const days = Math.min(7, Math.max(1, 7 - Math.max(0, Math.round((new Date(startedAt) - new Date(start)) / 86400000))));
+      return days < 7 ? Math.min(target, Math.ceil((target * days) / 7)) : target;
+    };
     const counts = starts.map((s) => (completionsByWeek[s] || []).filter((c) => c.taskId === task.id).length);
     const past = counts.slice(0, -1);
-    const met = past.filter((n) => n >= target).length;
+    const met = past.filter((n, i) => n >= targetFor(starts[i])).length;
     const now = counts.at(-1);
     const dots = counts
       .map((n, i) => {
         const current = i === counts.length - 1;
-        const state = n >= target ? "met" : current ? "current" : "open";
-        return `<span class="goal-dot is-${state}" title="${formatDate(starts[i])}: ${n} of ${target}"></span>`;
+        const goal = targetFor(starts[i]);
+        const state = n >= goal ? "met" : current ? "current" : "open";
+        return `<span class="goal-dot is-${state}" title="${formatDate(starts[i])}: ${n} of ${goal}"></span>`;
       })
       .join("");
-    const summary = past.length ? `${met} of the last ${past.length} ${past.length === 1 ? "week" : "weeks"}` : "Your first week";
+    const summary = !past.length
+      ? "Your first week"
+      : past.length === 1
+        ? met
+          ? "Met last week too"
+          : "Fresh start this week"
+        : `${met} of the last ${past.length} weeks`;
     return `
       <li class="goal">
         <span class="task-emoji tint-mint" aria-hidden="true">${task.emoji}</span>

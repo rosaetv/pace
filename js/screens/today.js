@@ -6,7 +6,7 @@ import { planDay } from "../logic/planner.js";
 import { suggestedEnergy, versionFor, shouldProposeLighten } from "../logic/energy.js";
 import { limitStatus } from "../logic/limits.js";
 import * as store from "../store.js";
-import { openEveningCheckIn, openLimitSheet, eveningDismissed, limitIcon, LIMIT_TINT } from "./evening.js";
+import { openEveningCheckIn, openLimitSheet, openLimitsSheet, todayLimits, eveningDismissed, limitIcon, LIMIT_TINT } from "./evening.js";
 import { openMoveSheet } from "./move.js";
 
 export const ENERGY = [
@@ -109,7 +109,7 @@ function taskRow(item) {
 function statsSection() {
   const energy = ENERGY.find((e) => e.id === state.energy);
   const checkedIn = Boolean(state.dayLog.energy);
-  const limits = state.ctx.tasks.filter((t) => t.kind === "limit" && t.status === "active");
+  const { shown: limits, rest } = todayLimits(state.ctx.tasks);
   const cards = limits.map((task) => {
     const s = limitStatus(task, state.ctx.limitEntries, state.date);
     return `
@@ -119,16 +119,25 @@ function statsSection() {
       </button>`;
   });
   return `
-    <section class="stats" style="grid-template-columns: repeat(${limits.length + 1}, minmax(0, 1fr))" aria-label="Today at a glance">
+    <section class="stats" style="grid-template-columns: repeat(${limits.length + 1}, minmax(0, 1fr))${rest.length ? " auto" : ""}" aria-label="Today at a glance">
       <button class="stat tint-${checkedIn ? energy.tint : "lilac"}" data-action="checkin">
         <span class="stat-label">${icon("zap")} Energy</span>
-        <span class="stat-value">${checkedIn ? energy.label : "Check in"}</span>
+        <span class="stat-value ${checkedIn ? "" : "is-cta"}">${checkedIn ? energy.label : "Check in"}</span>
       </button>
       ${cards.join("")}
+      ${
+        rest.length
+          ? `<button class="stat stat-more tint-lilac" data-action="more-limits" aria-label="${rest.length} more ${rest.length === 1 ? "limit" : "limits"}">
+              <span class="stat-label">${icon("ellipsis")}</span>
+              <span class="stat-value">+${rest.length}</span>
+            </button>`
+          : ""
+      }
     </section>`;
 }
 
-const shortLimitName = (task) => (task.id === "outings" ? "Outings" : task.name);
+// Nombre corto para la tarjeta: "Late night snacks" → "Snacks".
+const shortLimitName = (task) => (task.name.length > 10 ? task.name.split(" ").at(-1).replace(/^./, (c) => c.toUpperCase()) : task.name);
 
 function eventsSection() {
   return state.plan.events
@@ -464,7 +473,16 @@ export function openCheckIn(view) {
         </button>`,
       ).join("")}
     </div>
-    <p class="small muted" style="margin: 0 0 8px">Today is</p>
+    <div class="row" style="gap: 4px; margin: 0 0 8px">
+      <span class="small muted">Today is</span>
+      <button type="button" class="info-btn" data-action="kinds-info" aria-expanded="false" aria-label="What do these mean?">${icon("info")}</button>
+    </div>
+    <dl class="kinds-info" hidden>
+      <dt>Home day</dt><dd>You work from home, or just a regular day. Your usual list.</dd>
+      <dt>Office day</dt><dd>You go to the office. Heavier tasks move to lighter days, with your OK.</dd>
+      <dt>Day off</dt><dd>No work today, like a holiday. More room for tasks if you want them.</dd>
+      <dt>Rest day</dt><dd>Off the record. Only your meds show, and it doesn't count in your history or goals.</dd>
+    </dl>
     <div class="chips">
       ${DAY_KINDS.filter((k) => k.id !== "office" || weekday(state.date) <= 5).map((k) => `<button class="chip" data-kind="${k.id}" aria-pressed="${k.id === kind}">${k.label}</button>`).join("")}
     </div>
@@ -480,6 +498,13 @@ export function openCheckIn(view) {
       selected = option.dataset.energy;
       sheet.querySelectorAll("[data-energy]").forEach((b) => b.setAttribute("aria-pressed", b === option));
       sheet.querySelector("#checkin-error").hidden = true;
+    }
+    const info = event.target.closest("[data-action=kinds-info]");
+    if (info) {
+      const list = sheet.querySelector(".kinds-info");
+      list.hidden = !list.hidden;
+      info.setAttribute("aria-expanded", String(!list.hidden));
+      return;
     }
     const chip = event.target.closest("[data-kind]");
     if (chip) {
@@ -583,6 +608,7 @@ export async function renderToday(view) {
     const action = event.target.closest("[data-action]")?.dataset.action;
     if (action === "checkin") openCheckIn(view);
     if (action === "evening") openEveningCheckIn(state, () => refresh(view));
+    if (action === "more-limits") openLimitsSheet(state, () => refresh(view));
     if (action === "show-protected" || action === "hide-protected") {
       setRevealed(state.date, state.plan.protectedBlock, action === "show-protected");
       await refresh(view);

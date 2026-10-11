@@ -17,6 +17,7 @@ const FILES = [
   "js/app.js",
   "js/backup.js",
   "js/db.js",
+  "js/pwa.js",
   "js/store.js",
   "js/ui.js",
   "js/version.js",

@@ -1,7 +1,7 @@
 // Check-in de la noche y detalle de cada límite.
 // Sin penalización: los colores solo informan (neutral → amarillo → rojo).
 
-import { esc, icon, openSheet } from "../ui.js";
+import { esc, icon, openSheet, toast } from "../ui.js";
 import { weekday, formatDate, addDays } from "../logic/dates.js";
 import { limitStatus } from "../logic/limits.js";
 import * as store from "../store.js";
@@ -300,6 +300,79 @@ export function openLimitSheet(task, { date, ctx }, onSaved) {
       await store.setLimitEntry(task.id, date, values[task.id]);
       close();
       onSaved?.();
+    }
+  });
+}
+
+// ---------- Límites en Today: máximo 2 a la vista, el resto en "More" ----------
+
+export const MAX_ON_TODAY = 2;
+
+// Los que eliges ver en Today (en tu orden), y el resto.
+export function todayLimits(tasks) {
+  const all = tasks.filter((t) => t.kind === "limit" && t.status === "active");
+  const shown = all.filter((t) => t.limit.onToday !== false).slice(0, MAX_ON_TODAY);
+  return { all, shown, rest: all.filter((t) => !shown.includes(t)) };
+}
+
+export function openLimitsSheet({ date, ctx }, onChanged) {
+  let { all, shown } = todayLimits(ctx.tasks);
+  let pinned = new Set(shown.map((t) => t.id));
+  let changed = false;
+
+  const body = () => `
+    <h2 class="display sheet-title">Your limits</h2>
+    <p class="muted" style="margin: 4px 0 16px">Pin up to ${MAX_ON_TODAY} to see them at the top of Today.</p>
+    <ul class="settings-group">
+      ${all
+        .map((task) => {
+          const s = limitStatus(task, ctx.limitEntries, date);
+          const on = pinned.has(task.id);
+          return `
+          <li class="limit-row">
+            <button class="settings-item" data-open-limit="${task.id}">
+              <span class="settings-icon tint-${LIMIT_TINT[s.state]}">${icon(limitIcon(task))}</span>
+              <span class="settings-item-title">${esc(task.name)}</span>
+              <span class="small muted">${s.used} of ${s.max}</span>
+            </button>
+            <button class="pin-btn" data-pin="${task.id}" aria-pressed="${on}" aria-label="${on ? "Unpin from" : "Pin to"} Today">${icon(on ? "pin" : "pin-off")}</button>
+          </li>`;
+        })
+        .join("")}
+    </ul>`;
+
+  const { sheet, close } = openSheet(`<div id="limits-body">${body()}</div>`, {
+    label: "Your limits",
+    onClose: () => changed && onChanged?.(),
+  });
+  const container = sheet.querySelector("#limits-body");
+
+  sheet.addEventListener("click", async (event) => {
+    const pin = event.target.closest("[data-pin]");
+    if (pin) {
+      const id = pin.dataset.pin;
+      if (pinned.has(id)) pinned.delete(id);
+      else if (pinned.size >= MAX_ON_TODAY) {
+        toast(`Up to ${MAX_ON_TODAY} on Today. Unpin one first.`);
+        return;
+      } else pinned.add(id);
+      // Se guarda para todos, así queda claro cuáles van arriba.
+      for (const task of all) {
+        const onToday = pinned.has(task.id);
+        if (task.limit.onToday !== onToday) {
+          task.limit = { ...task.limit, onToday };
+          await store.saveTask(task);
+        }
+      }
+      changed = true;
+      container.innerHTML = body();
+      return;
+    }
+    const open = event.target.closest("[data-open-limit]");
+    if (open) {
+      close();
+      if (changed) await onChanged?.();
+      openLimitSheet(all.find((t) => t.id === open.dataset.openLimit), { date, ctx }, onChanged);
     }
   });
 }

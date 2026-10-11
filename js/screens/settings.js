@@ -147,8 +147,8 @@ function hoursRows(kind) {
       return `
       <div class="hours-row ${h ? "" : "is-off"}">
         <span class="small" style="font-weight: 600">${WEEKDAYS[d - 1]}</span>
-        <input class="input" type="time" data-hours="${kind}" data-day="${d}" data-end="0" value="${h?.[0] || ""}" aria-label="${WEEKDAYS[d - 1]} start" />
-        <input class="input" type="time" data-hours="${kind}" data-day="${d}" data-end="1" value="${h?.[1] || ""}" aria-label="${WEEKDAYS[d - 1]} end" />
+        <select class="select" data-hours="${kind}" data-day="${d}" data-end="0" aria-label="${WEEKDAYS[d - 1]} start">${timeOptions(h?.[0], { empty: "Off" })}</select>
+        <select class="select" data-hours="${kind}" data-day="${d}" data-end="1" aria-label="${WEEKDAYS[d - 1]} end">${timeOptions(h?.[1], { empty: "Off" })}</select>
       </div>`;
     })
     .join("");
@@ -164,7 +164,7 @@ function renderWork(view) {
     ${header("Work and office")}
     <section class="form-section">
       <h2 class="display">Usual hours</h2>
-      <p class="hint" style="margin: -4px 0 12px">Leave a day empty if you don't work it.</p>
+      <p class="hint" style="margin: -4px 0 12px">Choose "Off" for days you don't work.</p>
       ${hoursRows("normal")}
     </section>
     <section class="form-section">
@@ -213,13 +213,15 @@ function renderWork(view) {
     if (el.dataset.hours) {
       const kind = el.dataset.hours;
       const day = Number(el.dataset.day);
-      const current = settings.work[kind][day] || ["", ""];
-      const next = [...current];
-      next[Number(el.dataset.end)] = el.value;
       const hours = { ...settings.work[kind] };
-      if (next[0] && next[1]) hours[day] = next;
-      else if (!next[0] && !next[1]) delete hours[day];
-      else return; // a medio llenar: espera al otro campo
+      if (!el.value) {
+        delete hours[day]; // "Off" en cualquiera de las dos: ese día no se trabaja
+      } else {
+        // Si el día estaba libre, la otra hora se completa con una por defecto.
+        const next = [...(hours[day] || ["09:00", "18:00"])];
+        next[Number(el.dataset.end)] = el.value;
+        hours[day] = next;
+      }
       await save({ work: { ...settings.work, [kind]: hours } });
       renderWork(view);
     }
@@ -281,6 +283,21 @@ function renderWorkout(view) {
 
 // ---------- Free time ----------
 
+// Horas cada 30 minutos para elegir en una lista (caben mejor que el reloj en el iPhone).
+function timeOptions(selected, { endOfDay = false, empty = "" } = {}) {
+  const options = empty ? [`<option value="" ${!selected ? "selected" : ""}>${empty}</option>`] : [];
+  for (let m = 0; m < 24 * 60; m += 30) {
+    const value = `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+    options.push(`<option value="${value}" ${value === selected ? "selected" : ""}>${formatTime(value)}</option>`);
+  }
+  if (endOfDay) options.push(`<option value="24:00" ${selected === "24:00" ? "selected" : ""}>Midnight</option>`);
+  // Si la hora guardada no está en la lista (por ejemplo 19:15), se agrega.
+  if (selected && !options.some((o) => o.includes(`value="${selected}"`))) {
+    options.unshift(`<option value="${selected}" selected>${formatTime(selected)}</option>`);
+  }
+  return options.join("");
+}
+
 function renderFreeTime(view) {
   const blocks = settings.protectedBlocks;
   view.innerHTML = `
@@ -294,13 +311,13 @@ function renderFreeTime(view) {
         <select class="select" data-block="${i}" data-field="weekday" aria-label="Day">
           ${WEEKDAYS.map((d, j) => `<option value="${j + 1}" ${b.weekday === j + 1 ? "selected" : ""}>${d}</option>`).join("")}
         </select>
-        <input class="input" type="time" data-block="${i}" data-field="from" value="${b.from}" aria-label="From" />
-        <input class="input" type="time" data-block="${i}" data-field="to" value="${b.to === "24:00" ? "" : b.to}" placeholder="End" aria-label="Until (empty means end of day)" />
+        <select class="select" data-block="${i}" data-field="from" aria-label="From">${timeOptions(b.from)}</select>
+        <select class="select" data-block="${i}" data-field="to" aria-label="Until">${timeOptions(b.to, { endOfDay: true })}</select>
         <button class="icon-btn" data-remove-block="${i}" aria-label="Remove block">${icon("x")}</button>
       </div>`,
       )
       .join("")}
-    <p class="hint" style="margin-bottom: 12px">An empty "until" (--:--) means the rest of the day.</p>
+    <div style="height: 12px"></div>
     <button class="btn btn-secondary btn-block" data-action="add-block">${icon("plus")} Add a block</button>`;
 
   view.onchange = async (event) => {
@@ -309,8 +326,8 @@ function renderFreeTime(view) {
     const list = settings.protectedBlocks.map((b) => ({ ...b }));
     const b = list[Number(el.dataset.block)];
     if (el.dataset.field === "weekday") b.weekday = Number(el.value);
-    if (el.dataset.field === "from") b.from = el.value || "00:00";
-    if (el.dataset.field === "to") b.to = el.value || "24:00";
+    if (el.dataset.field === "from") b.from = el.value;
+    if (el.dataset.field === "to") b.to = el.value;
     await save({ protectedBlocks: list }, { replan: true });
   };
   view.onclick = async (event) => {
@@ -386,7 +403,7 @@ function appointmentSheet(view, ev) {
         : `<div class="field"><label for="f-ev-date">Date</label><input id="f-ev-date" class="input" type="date" data-ev="date" value="${draft.date || todayISO()}" /></div>`
     }
     <div class="field-row">
-      <div class="field"><label for="f-ev-start">Time</label><input id="f-ev-start" class="input" type="time" data-ev="start" value="${draft.start}" /></div>
+      <div class="field"><label for="f-ev-start">Time</label><select id="f-ev-start" class="select" data-ev="start">${timeOptions(draft.start)}</select></div>
       <div class="field"><label for="f-ev-dur">Minutes</label><input id="f-ev-dur" class="input" type="number" inputmode="numeric" data-ev="durationMin" value="${draft.durationMin || 60}" /></div>
     </div>
     ${
