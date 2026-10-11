@@ -1,6 +1,6 @@
 // Registro del service worker (modo sin internet) y aviso de "nueva versión".
 
-import { APP_VERSION } from "./version.js";
+let registration = null;
 
 export function setupPWA() {
   if (!("serviceWorker" in navigator)) return;
@@ -10,8 +10,9 @@ export function setupPWA() {
   if (local && !new URLSearchParams(location.search).has("sw")) return;
 
   navigator.serviceWorker
-    .register(`sw.js?v=${APP_VERSION}`)
-    .then((registration) => {
+    .register("sw.js")
+    .then((reg) => {
+      registration = reg;
       // Ya había una versión nueva esperando.
       if (registration.waiting && navigator.serviceWorker.controller) showUpdate(registration.waiting);
 
@@ -54,4 +55,22 @@ function showUpdate(worker) {
     <button class="btn btn-primary" type="button">Update</button>`;
   bar.querySelector("button").addEventListener("click", () => worker.postMessage("skipWaiting"));
   document.body.append(bar);
+}
+
+// "Check for updates" en Settings. Devuelve "updating", "latest" u "offline".
+export async function checkForUpdates() {
+  if (!registration) return "offline";
+  try {
+    await registration.update();
+  } catch {
+    return "offline";
+  }
+  // Si hay una versión esperando (o se está instalando), muestra la barra de "Update".
+  const worker = registration.waiting || registration.installing;
+  if (worker) {
+    if (registration.waiting) showUpdate(registration.waiting);
+    else worker.addEventListener("statechange", () => worker.state === "installed" && showUpdate(worker));
+    return "updating";
+  }
+  return "latest";
 }

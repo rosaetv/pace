@@ -1773,3 +1773,14 @@ input[type="time"].input::-webkit-date-and-time-value {
 .legend-ring {
   flex-shrink: 0;
 }
+
+.check-updates {
+  min-height: 40px;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-sm);
+}
+
+.check-updates .icon {
+  width: 16px;
+  height: 16px;
+}

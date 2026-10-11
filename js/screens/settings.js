@@ -7,6 +7,7 @@ import { exportBackup, readBackup, restoreBackup } from "../backup.js";
 import { ENERGY } from "./today.js";
 import * as store from "../store.js";
 import { APP_NAME, APP_VERSION } from "../version.js";
+import { checkForUpdates } from "../pwa.js";
 
 const TINTS = ["lilac", "coral", "sky", "butter", "rose", "mint", "peach"];
 
@@ -103,7 +104,14 @@ function renderMain(view) {
           .join("")}
       </ul>`,
     ).join("")}
-    <p class="app-version">${APP_NAME} · v${APP_VERSION}</p>`;
+    <p class="app-version">${APP_NAME} · v${APP_VERSION}</p>
+    <button class="btn btn-ghost btn-block check-updates" data-action="check-updates">${icon("refresh-cw")} Check for updates</button>`;
+
+  view.onclick = async (event) => {
+    if (!event.target.closest("[data-action=check-updates]")) return;
+    const result = await checkForUpdates();
+    toast({ updating: "New version found. Tap Update below.", latest: "You have the latest version", offline: "Can't check right now" }[result]);
+  };
 }
 
 // ---------- Profile ----------

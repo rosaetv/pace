@@ -1,11 +1,11 @@
 // Service worker: guarda la app en el teléfono para que funcione sin internet.
 //
-// - La versión viene de js/version.js (se registra como sw.js?v=X.Y.Z).
-//   Al subir la versión, el teléfono descarga la app nueva y ofrece "Update".
+// - VERSION la escribe dev/publicar.py con la de js/version.js. Así este archivo cambia en
+//   cada versión: el iPhone solo busca actualizaciones cuando este archivo es distinto.
 // - Si agregas un archivo nuevo a la app, súmalo a FILES
 //   (python3 dev/revisar-sw.py avisa si falta alguno).
 
-const VERSION = new URL(self.location).searchParams.get("v") || "dev";
+const VERSION = "1.0.4"; // la reemplaza dev/publicar.py
 const CACHE = `pace-${VERSION}`;
 
 const FILES = [
