@@ -5,7 +5,7 @@
 // - Si agregas un archivo nuevo a la app, súmalo a FILES
 //   (python3 dev/revisar-sw.py avisa si falta alguno).
 
-const VERSION = "1.0.6"; // la reemplaza dev/publicar.py
+const VERSION = "1.0.7"; // la reemplaza dev/publicar.py
 const CACHE = `pace-${VERSION}`;
 
 const FILES = [
@@ -52,9 +52,29 @@ const FILES = [
 // Instalar: descarga y guarda todos los archivos de esta versión.
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(FILES.map((file) => new Request(file, { cache: "reload" })))),
+    caches
+      .open(CACHE)
+      .then((cache) => cache.addAll(FILES.map((file) => new Request(file, { cache: "reload" }))))
+      // Si la app guardada en el teléfono no es Pace (por ejemplo, se subió otra app por error),
+      // la versión nueva se instala sola, sin esperar a que toques "Update".
+      .then(() => foreignEntries())
+      .then((foreign) => foreign.length && self.skipWaiting()),
   );
 });
+
+// Archivos de esta dirección (/pace/) guardados por OTRA app del mismo dominio.
+// Solo se miran las entradas de /pace/; lo de las otras apps no se toca.
+async function foreignEntries() {
+  const found = [];
+  for (const key of await caches.keys()) {
+    if (key.startsWith("pace-")) continue;
+    const cache = await caches.open(key);
+    for (const request of await cache.keys()) {
+      if (request.url.startsWith(self.registration.scope)) found.push({ cache, request });
+    }
+  }
+  return found;
+}
 
 // Activar: borra las versiones anteriores guardadas.
 self.addEventListener("activate", (event) => {
@@ -62,6 +82,9 @@ self.addEventListener("activate", (event) => {
     caches
       .keys()
       .then((keys) => Promise.all(keys.filter((k) => k.startsWith("pace-") && k !== CACHE).map((k) => caches.delete(k))))
+      // Quita las copias de /pace/ que guardó otra app (sin tocar el resto de esa app).
+      .then(() => foreignEntries())
+      .then((foreign) => Promise.all(foreign.map(({ cache, request }) => cache.delete(request))))
       .then(() => self.clients.claim()),
   );
 });
