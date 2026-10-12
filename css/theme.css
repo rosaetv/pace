@@ -1,95 +1,96 @@
 /* =========================================================
-   SHOW UP — TEMA VISUAL
+   PACE — TEMA VISUAL
    ---------------------------------------------------------
    Este es el único archivo que necesitas tocar para cambiar
    el aspecto de la app. Todo el resto del CSS usa estas
    variables. Cambia un valor, guarda y recarga la página.
+   Puedes ver todas las piezas juntas en #/styleguide.
    ========================================================= */
 
+/* ---------- Fuentes (guardadas en /fonts para funcionar sin internet) ---------- */
+@font-face {
+  font-family: "Fraunces";
+  src: url("../fonts/fraunces.woff2") format("woff2");
+  font-weight: 300 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Figtree";
+  src: url("../fonts/figtree.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  /* ---------- Colores ----------
-     Todas las combinaciones de texto cumplen contraste WCAG AA (4,5:1)
-     y los íconos/gráficas 3:1. Si cambias un color, revisa el contraste
-     (por ejemplo en webaim.org/resources/contrastchecker). */
-  --color-bg: #f5f5f2;            /* fondo general (blanco roto) */
+  /* ---------- Colores base ----------
+     Todo el texto cumple contraste WCAG AA (4,5:1) sobre su fondo.
+     Si cambias un color, revisa el contraste en webaim.org/resources/contrastchecker */
+  --color-bg: #f7f5fb;            /* fondo general (lavanda casi blanco) */
   --color-surface: #ffffff;       /* tarjetas */
-  --color-surface-2: #f0f0ec;     /* elementos dentro de tarjetas, inputs */
-  --color-border: #e4e4df;        /* bordes sutiles */
-  --color-border-strong: #c9c9c2; /* bordes de botones secundarios */
+  --color-surface-2: #f1eef9;     /* chips, inputs, elementos dentro de tarjetas */
+  --color-border: #e8e4f3;        /* bordes sutiles */
 
-  --color-text: #1b1b1f;          /* texto principal */
-  --color-text-muted: #54575e;    /* texto secundario */
-  --color-text-faint: #686c73;    /* texto terciario y valores sugeridos en gris */
+  --color-text: #2e2a47;          /* texto principal (tinta violeta oscura) */
+  --color-text-muted: #6b6590;    /* texto secundario */
+  --color-text-faint: #76709a;    /* fechas, ayudas */
+  --color-decor: #cfc9e6;         /* solo decorativo: círculos vacíos, separadores */
 
-  --color-primary: #1b1b1f;       /* botones principales (pastilla oscura) */
-  --color-on-primary: #ffffff;    /* texto encima de botones principales */
+  --color-primary: #6a5fd0;       /* lavanda: botón principal, check, selección */
+  --color-on-primary: #ffffff;
+  --color-primary-soft: #eeeafb;  /* fondo suave del primario */
+  --color-primary-deep: #3f3690;  /* texto sobre el fondo suave */
 
-  --color-accent: #5b4bc4;        /* violeta: enlaces, selección, gráficas */
-  --color-accent-soft: #eeebfb;   /* fondos suaves del acento */
-  --color-on-accent: #ffffff;     /* texto encima del acento */
+  --color-ink-bar: #2e2a47;       /* barra de pestañas flotante */
+  --color-on-ink-bar: #ffffff;
+  --color-on-ink-bar-muted: #9c97b8;
 
-  --color-success: #63ab7a;       /* series hechas, semanas cumplidas */
-  --color-success-soft: #e4f2e8;  /* fondo de series hechas */
-  --color-on-success: #1b1b1f;    /* check oscuro: el blanco no tiene contraste suficiente */
+  /* ---------- Pasteles ----------
+     Cada pastel tiene su fondo (-bg), su texto (-ink) y un texto suave (-ink-2). */
+  --mint-bg: #ddf3ea;   --mint-ink: #1f5242;   --mint-ink-2: #2f6b57;
+  --sky-bg: #e3eefb;    --sky-ink: #24507f;    --sky-ink-2: #3a6ea8;
+  --peach-bg: #fff0e3;  --peach-ink: #7a4318;  --peach-ink-2: #9a5a28;
+  --rose-bg: #fbe6ef;   --rose-ink: #7a2e4f;   --rose-ink-2: #a8466e;
+  --butter-bg: #fff3dc; --butter-ink: #6e4508; --butter-ink-2: #8a5a12;
+  --lilac-bg: #eeeafb;  --lilac-ink: #3f3690;  --lilac-ink-2: #5a50a8;
+  --coral-bg: #fce3df;  --coral-ink: #8e2f22;  --coral-ink-2: #a8442f;
 
-  --color-danger: #b83a27;        /* borrar, errores */
-  --color-danger-soft: #fbe7e3;   /* fondo de la etiqueta "no te gusta" */
-  --color-favorite: #a86f00;      /* estrella de favoritos */
-  --color-warning-text: #8a5600;  /* avisos (respaldo pendiente) */
+  /* ---------- Energía ---------- */
+  --energy-full: var(--mint-bg);    --energy-full-ink: var(--mint-ink);
+  --energy-high: var(--sky-bg);     --energy-high-ink: var(--sky-ink);
+  --energy-half: var(--peach-bg);   --energy-half-ink: var(--peach-ink);
+  --energy-min: var(--rose-bg);     --energy-min-ink: var(--rose-ink);
 
-  /* Colores pastel para dar identidad (días del plan, tarjetas destacadas).
-     Sobre ellos el texto siempre es oscuro. */
-  --tint-1: #e6e0fb;              /* lila */
-  --tint-2: #d9e7f5;              /* azul */
-  --tint-3: #dcedd6;              /* verde */
-  --tint-4: #f9e1d5;              /* durazno */
-  --tint-5: #f0e8d6;              /* arena */
+  /* ---------- Límites: neutral → amarillo al llegar → rojo al pasar ---------- */
+  --limit-ok: var(--lilac-bg);      --limit-ok-ink: var(--lilac-ink);
+  --limit-at: var(--butter-bg);     --limit-at-ink: var(--butter-ink);
+  --limit-over: var(--coral-bg);    --limit-over-ink: var(--coral-ink);
 
-  /* Degradados */
-  --gradient-hero:                /* brillo de color arriba de cada pantalla */
-    radial-gradient(70% 55% at 5% 0%, rgba(176, 158, 246, 0.7), transparent 70%),
-    radial-gradient(65% 50% at 100% 0%, rgba(252, 190, 160, 0.65), transparent 70%),
-    radial-gradient(60% 45% at 55% 35%, rgba(160, 200, 240, 0.45), transparent 70%);
-  --gradient-featured: linear-gradient(135deg, #e6e0fb 0%, #d9e7f5 100%); /* tarjeta "Siguiente" */
-  --gradient-streak: linear-gradient(135deg, #dcedd6 0%, #f0e8d6 100%);   /* semanas cumplidas */
-  --gradient-sunrise:             /* frase del día: amanecer */
-    linear-gradient(135deg, #ffe7b8 0%, #ffcfae 50%, #fbbdcb 100%);
-  --color-quote-label: #6b3a1f;   /* etiqueta "Hoy" sobre el amanecer */
-  --color-week-upcoming: rgba(27, 27, 31, 0.1); /* semanas próximas = fondo de la barra de hito */
-  --color-track: rgba(27, 27, 31, 0.14);        /* pasos pendientes del cuestionario */
-  --color-live-dot: #7ed39a;      /* punto de "entrenamiento en curso" */
-  --color-on-primary-soft: rgba(255, 255, 255, 0.75); /* texto secundario sobre la barra oscura */
-  --gradient-progress-start: #3d7cc9;  /* anillo y barras de progreso */
-  --gradient-progress-end: #5b4bc4;
-
-  /* Sombras */
-  --shadow-card: 0 1px 2px rgba(27, 27, 31, 0.04), 0 6px 20px rgba(27, 27, 31, 0.05);
-  --shadow-float: 0 8px 30px rgba(27, 27, 31, 0.12);
-  --shadow-tabbar: 0 -4px 24px rgba(27, 27, 31, 0.08);
-
-  /* Pestaña activa de la barra inferior */
-  --color-tab-active: var(--tint-1);
+  /* ---------- Sombras (muy suaves) ---------- */
+  --shadow-card: 0 1px 2px rgba(46, 42, 71, 0.04), 0 8px 24px rgba(46, 42, 71, 0.05);
+  --shadow-float: 0 12px 32px rgba(46, 42, 71, 0.18);
+  --shadow-sheet: 0 -8px 40px rgba(46, 42, 71, 0.16);
 
   /* ---------- Tipografía ---------- */
-  --font-family: "Manrope", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  --font-display: "Fraunces", Georgia, serif;  /* títulos */
+  --font-body: "Figtree", -apple-system, system-ui, sans-serif; /* texto y botones */
+
+  --display-weight: 300;      /* Fraunces Light */
+  --display-soft: 100;        /* 0 = terminaciones afiladas, 100 = redondeadas */
 
   /* Tamaños relativos al texto base (1rem). En el iPhone, 1rem sigue tu ajuste
-     de "Texto más grande"; con el tamaño más pequeño, 1rem ≈ 14px.
-     Los px de los comentarios son con el tamaño estándar de computadora (16px). */
-  --font-size-xs: 0.8rem;    /* ~13px — etiquetas pequeñas */
-  --font-size-sm: 0.875rem;  /* 14px — texto secundario */
-  --font-size-md: 1rem;      /* 16px — texto normal */
-  --font-size-lg: 1.25rem;   /* 20px — títulos de tarjeta */
-  --font-size-xl: 1.75rem;   /* 28px — títulos de pantalla */
-  --font-size-xxl: 2.5rem;   /* 40px — números destacados */
+     de "Tamaño del texto". Los px son con el tamaño estándar (16px). */
+  --font-size-xs: 0.75rem;    /* 12px — etiquetas */
+  --font-size-sm: 0.875rem;   /* 14px — texto secundario */
+  --font-size-md: 1rem;       /* 16px — texto normal */
+  --font-size-lg: 1.25rem;    /* 20px — títulos de tarjeta */
+  --font-size-xl: 1.75rem;    /* 28px — títulos de pantalla */
+  --font-size-xxl: 2.25rem;   /* 36px — saludo */
 
-  --font-weight-regular: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
-
-  --line-height-tight: 1.2;
-  --line-height-normal: 1.5;
+  --line-height-tight: 1.15;
+  --line-height-normal: 1.45;
 
   /* ---------- Espaciados ---------- */
   --space-1: 4px;
@@ -100,101 +101,31 @@
   --space-6: 32px;
   --space-7: 48px;
 
-  --page-gutter: var(--space-5);  /* margen lateral de las pantallas */
-  --card-padding: var(--space-5); /* relleno interior de tarjetas y filas de listas */
+  --page-gutter: 20px;
 
   /* ---------- Formas ---------- */
-  --radius-sm: 8pxpx;
-  --radius-md: 16px;
-  --radius-lg: 24px;
+  --radius-sm: 12px;
+  --radius-md: 18px;    /* filas de tareas, botones */
+  --radius-lg: 24px;    /* tarjetas grandes */
+  --radius-xl: 32px;    /* hojas que suben desde abajo */
   --radius-full: 999px;
 
   /* ---------- Tamaños táctiles ---------- */
-  --tap-min: 48px;          /* alto mínimo de cualquier botón */
-  --tap-large: 56px;        /* área táctil grande */
-
-  /* Botones principales (Empezar, Ver rutina, Guardar…) */
-  --btn-height: 56px;
-  --btn-padding-x: var(--space-5);
+  --tap-min: 44px;
+  --btn-height: 52px;
+  --check-size: 28px;
   --tabbar-height: 64px;
 
   /* ---------- Movimiento ---------- */
-  --transition-fast: 150ms ease;
-}
-
-/* =========================================================
-   MODO OSCURO
-   Se usa cuando el teléfono está en modo oscuro (o lo eliges en Perfil).
-   Mismas variables, otros valores. Contraste verificado igual que el claro.
-   ========================================================= */
-
-:root[data-theme="dark"] {
-  color-scheme: dark;
-
-  --color-bg: #121214;
-  --color-surface: #1c1c20;
-  --color-surface-2: #26262b;
-  --color-border: #303036;
-  --color-border-strong: #45454c;
-
-  --color-text: #f1f0ec;
-  --color-text-muted: #a9a8a2;
-  --color-text-faint: #93928c;
-
-  --color-primary: #f1f0ec;       /* botones principales: pastilla clara */
-  --color-on-primary: #121214;
-
-  --color-accent: #a99cf2;
-  --color-accent-soft: #2c2747;
-  --color-on-accent: #121214;
-
-  --color-success: #63ab7a;
-  --color-success-soft: #1f3427;
-  --color-on-success: #121214;
-
-  --color-danger: #ef8a78;
-  --color-danger-soft: #3a211d;
-  --color-favorite: #e8b04a;
-  --color-warning-text: #e8b04a;
-
-  --tint-1: #2e2846;
-  --tint-2: #213244;
-  --tint-3: #233626;
-  --tint-4: #3d2a22;
-  --tint-5: #352f22;
-
-  --gradient-hero:
-    radial-gradient(70% 55% at 5% 0%, rgba(120, 100, 220, 0.35), transparent 70%),
-    radial-gradient(65% 50% at 100% 0%, rgba(220, 130, 100, 0.25), transparent 70%),
-    radial-gradient(60% 45% at 55% 35%, rgba(90, 140, 200, 0.22), transparent 70%);
-  --gradient-featured: linear-gradient(135deg, #2e2846 0%, #213244 100%);
-  --gradient-streak: linear-gradient(135deg, #233626 0%, #352f22 100%);
-  --gradient-sunrise: linear-gradient(135deg, #4a3a22 0%, #4f2f26 50%, #4a2733 100%);
-  --color-quote-label: #f3c49b;
-  --gradient-progress-start: #6aa3e6;
-  --gradient-progress-end: #a99cf2;
-
-  --color-week-upcoming: rgba(255, 255, 255, 0.12);
-  --color-track: rgba(255, 255, 255, 0.16);
-  --color-live-dot: #63ab7a;
-  --color-on-primary-soft: rgba(18, 18, 20, 0.7);
-
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.25);
-  --shadow-float: 0 8px 30px rgba(0, 0, 0, 0.5);
-  --shadow-tabbar: 0 -4px 24px rgba(0, 0, 0, 0.35);
+  --transition-fast: 160ms ease;
+  --transition-soft: 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 /* ---------- Ajustes solo para el teléfono ---------- */
 @media (pointer: coarse) {
   /* El texto base sigue tu ajuste de iOS (Ajustes → Pantalla y brillo →
-     Tamaño del texto). Si prefieres un tamaño fijo, borra esta regla html. */
+     Tamaño del texto). Si prefieres un tamaño fijo, borra esta regla. */
   html {
     font: -apple-system-body;
-  }
-
-  /* Botones principales más compactos en el teléfono. */
-  :root {
-    --btn-height: 46px;
-    --btn-padding-x: var(--space-4);
   }
 }

@@ -2,7 +2,7 @@
 // Se carga una sola vez; después todo se edita desde la app.
 // (Una rutina personal se carga con Settings → Backup → Restore from a backup.)
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export const DEFAULT_SETTINGS = {
   schemaVersion: SCHEMA_VERSION,
@@ -71,7 +71,7 @@ const task = (fields) => ({
 
 // En este orden aparecen en Today (de la mañana a la noche). Se puede cambiar desde la app.
 export const TASKS = [
-  task({ id: "water", name: "Glass of water", emoji: "💧", categoryId: "health", versions: same("Glass of water", { note: "First thing in the morning" }) }),
+  task({ id: "water", timeOfDay: "morning", name: "Glass of water", emoji: "💧", categoryId: "health", versions: same("Glass of water", { note: "First thing in the morning" }) }),
   task({ id: "shower", name: "Shower", emoji: "🚿", categoryId: "self-care", versions: same("Shower"), streak: { type: "weekly", target: 6 } }),
   task({
     id: "gym", name: "Workout", emoji: "🏋️", categoryId: "movement",
@@ -126,14 +126,14 @@ export const TASKS = [
     },
   }),
   task({
-    id: "outfit", name: "Prep outfit", emoji: "👕", categoryId: "self-care",
+    id: "outfit", timeOfDay: "night", name: "Prep outfit", emoji: "👕", categoryId: "self-care",
     versions: { full: { label: "Prep outfit" }, high: { label: "Prep outfit" }, half: null, min: null },
   }),
   task({
-    id: "night-routine", name: "Night routine", emoji: "🌙", categoryId: "self-care",
+    id: "night-routine", timeOfDay: "night", name: "Night routine", emoji: "🌙", categoryId: "self-care",
     versions: { full: { label: "Night routine" }, high: { label: "Night routine" }, half: { label: "Set alarms" }, min: null },
   }),
-  task({ id: "skincare", name: "Skincare", emoji: "🧴", categoryId: "self-care", versions: same("Skincare"), streak: { type: "weekly", target: 6 } }),
+  task({ id: "skincare", timeOfDay: "night", name: "Skincare", emoji: "🧴", categoryId: "self-care", versions: same("Skincare"), streak: { type: "weekly", target: 6 } }),
 
   // ---------- Límites ----------
   task({

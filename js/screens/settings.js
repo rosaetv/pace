@@ -1,7 +1,7 @@
 // Settings: perfil, trabajo y oficina, workout, tiempo libre, citas, salud,
 // categorías, planificación y respaldo. Todo se guarda al momento.
 
-import { esc, icon, openSheet, askSheet, toast } from "../ui.js";
+import { esc, icon, openSheet, askSheet, toast, lastGrapheme } from "../ui.js";
 import { WEEKDAYS, todayISO, weekStart, formatDate, formatTime, diffDays, addDays } from "../logic/dates.js";
 import { exportBackup, readBackup, restoreBackup } from "../backup.js";
 import { ENERGY } from "./today.js";
@@ -140,7 +140,7 @@ function renderProfile(view) {
     const key = event.target.dataset.profile;
     if (!key) return;
     let value = event.target.value.trim();
-    if (key === "avatar") value = [...new Intl.Segmenter().segment(value)][0]?.segment || "🙂";
+    if (key === "avatar") value = lastGrapheme(value) || "🙂";
     await save({ profile: { ...settings.profile, [key]: value || null } });
   };
 }
@@ -459,7 +459,7 @@ function appointmentSheet(view, ev) {
         sheet.querySelector("#ev-error").hidden = false;
         return;
       }
-      draft.emoji = [...new Intl.Segmenter().segment(draft.emoji || "📅")][0]?.segment || "📅";
+      draft.emoji = lastGrapheme(draft.emoji) || "📅";
       if (!draft.recurrence) delete draft.recurrence;
       await store.saveEvent(draft);
       await store.resetAssignments(weekStart(todayISO()));

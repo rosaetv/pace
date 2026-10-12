@@ -6,6 +6,7 @@ import { todayISO, weekStart, weekday, addDays, formatDate, WEEKDAYS } from "../
 import { effectiveTask } from "../logic/energy.js";
 import * as store from "../store.js";
 import { limitIcon } from "./evening.js";
+import { TIMES_OF_DAY } from "../logic/time-of-day.js";
 
 const LEVELS = [
   { id: "full", label: "100%", tint: "mint" },
@@ -137,6 +138,17 @@ function basicsSection() {
           { habit: "Something to do.", limit: "Something not to overdo. Counted weekly, never penalized.", bonus: "An extra win. Never counts against you." }[draft.kind]
         }</p>
       </div>
+    </section>`;
+}
+
+function timeOfDaySection() {
+  return `
+    <section class="form-section">
+      <h2 class="display">Time of day</h2>
+      <div class="chips">
+        ${TIMES_OF_DAY.map((t) => `<button type="button" class="chip" data-time-of-day="${t.id || ""}" aria-pressed="${(draft.timeOfDay || null) === t.id}">${t.label}</button>`).join("")}
+      </div>
+      <p class="hint" style="margin-top: 8px">Sets where it shows up in Today. You can still drag it anywhere in Tasks → Reorder.</p>
     </section>`;
 }
 
@@ -346,7 +358,7 @@ function draw(view) {
     }
     ${archived ? `<div class="tint tint-lilac" style="margin-bottom: 8px">Archived. Its history is kept.</div>` : ""}
     ${basicsSection()}
-    ${draft.kind === "habit" ? frequencySection() + versionsSection() + rulesSection() + streakSection() + healthSection() : ""}
+    ${draft.kind === "habit" ? timeOfDaySection() + frequencySection() + versionsSection() + rulesSection() + streakSection() + healthSection() : ""}
     ${draft.kind === "limit" ? limitSection() : ""}
     ${draft.kind === "bonus" ? bonusSection() : ""}
     ${
@@ -423,6 +435,7 @@ async function save(view) {
     task.order = Math.max(-1, ...all.map((t) => t.order ?? 0)) + 1;
     task.createdAt = new Date().toISOString();
     await store.saveTask(task);
+    if (task.kind === "habit") await store.placeByTimeOfDay(task);
     await store.resetAssignments(thisWeek);
     location.hash = "#/tasks";
     return;
@@ -454,6 +467,8 @@ async function save(view) {
     } else {
       const base = await store.getTask(task.id);
       await store.saveTask({ ...base, ...task, order: base.order, status: base.status });
+      // Si cambió el momento del día, se mueve al final de su nuevo bloque.
+      if ((base.timeOfDay || null) !== (task.timeOfDay || null)) await store.placeByTimeOfDay(task);
       await store.removeOverride(task.id, thisWeek);
     }
     await store.resetAssignments(thisWeek);
@@ -538,11 +553,7 @@ export async function renderTaskEdit(view, id) {
     const el = event.target;
     if (el.dataset.bind) {
       let value = el.value;
-      if (el.dataset.emoji) {
-        // Solo el primer emoji o carácter.
-        const first = [...new Intl.Segmenter().segment(value)][0]?.segment || "";
-        value = first;
-      }
+
       if (el.dataset.number !== undefined) value = value === "" ? undefined : Math.max(0, parseInt(value, 10) || 0);
       if (el.type === "date" && !value) value = el.dataset.bind.includes("phases") ? null : undefined;
       setPath(draft, el.dataset.bind, value);
@@ -594,6 +605,11 @@ export async function renderTaskEdit(view, id) {
       const next = Math.min(Number(step.dataset.max), Math.max(Number(step.dataset.min), current + Number(step.dataset.delta)));
       setPath(draft, path, next === 0 && !path.startsWith("limit") ? undefined : next);
       if (path.startsWith("limit") && next === 0) getPath(draft, "limit").perOccasionMax = 0;
+      return draw(view);
+    }
+    const tod = t.closest("[data-time-of-day]");
+    if (tod) {
+      draft.timeOfDay = tod.dataset.timeOfDay || null;
       return draw(view);
     }
     const day = t.closest("[data-weekday]");
