@@ -1,6 +1,7 @@
-// Registro del service worker (modo sin internet) y aviso de "nueva versión".
+// Registro del service worker y aviso de "nueva versión disponible".
 
-let registration = null;
+import { VERSION } from "./version.js";
+import { t } from "./i18n.js";
 
 export function setupPWA() {
   if (!("serviceWorker" in navigator)) return;
@@ -9,29 +10,26 @@ export function setupPWA() {
   const local = ["localhost", "127.0.0.1"].includes(location.hostname);
   if (local && !new URLSearchParams(location.search).has("sw")) return;
 
-  navigator.serviceWorker
-    .register("sw.js")
-    .then((reg) => {
-      registration = reg;
-      // Ya había una versión nueva esperando.
-      if (registration.waiting && navigator.serviceWorker.controller) showUpdate(registration.waiting);
+  navigator.serviceWorker.register(`sw.js?v=${VERSION}`).then((registration) => {
+    // Ya había una versión nueva esperando.
+    if (registration.waiting && navigator.serviceWorker.controller) showUpdate(registration.waiting);
 
-      registration.addEventListener("updatefound", () => {
-        const worker = registration.installing;
-        worker?.addEventListener("statechange", () => {
-          if (worker.state === "installed" && navigator.serviceWorker.controller) showUpdate(worker);
-        });
+    registration.addEventListener("updatefound", () => {
+      const worker = registration.installing;
+      worker?.addEventListener("statechange", () => {
+        // "installed" con una versión anterior activa = hay actualización.
+        if (worker.state === "installed" && navigator.serviceWorker.controller) showUpdate(worker);
       });
-
-      // Al volver a abrir la app desde la pantalla de inicio, busca versiones nuevas.
-      document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "visible") registration.update().catch(() => {});
-      });
-    })
-    .catch((error) => {
-      // Si el navegador no lo permite, la app funciona igual (solo que sin modo sin internet).
-      console.warn("No offline mode:", error.message);
     });
+
+    // Al volver a abrir la app desde la pantalla de inicio, busca versiones nuevas.
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") registration.update().catch(() => {});
+    });
+  }).catch((error) => {
+    // Si el navegador no lo permite, la app funciona igual (solo que sin modo sin conexión).
+    console.warn("Sin modo sin conexión:", error.message);
+  });
 
   // Cuando la versión nueva toma el control, recarga para usarla.
   // En la primera visita no hay versión anterior: no hace falta recargar.
@@ -51,26 +49,8 @@ function showUpdate(worker) {
   bar.className = "update-bar";
   bar.setAttribute("role", "status");
   bar.innerHTML = `
-    <span>A new version of Pace is ready.</span>
-    <button class="btn btn-primary" type="button">Update</button>`;
+    <span>${t("pwa.updateReady")}</span>
+    <button class="btn-small" type="button">${t("pwa.update")}</button>`;
   bar.querySelector("button").addEventListener("click", () => worker.postMessage("skipWaiting"));
   document.body.append(bar);
-}
-
-// "Check for updates" en Settings. Devuelve "updating", "latest" u "offline".
-export async function checkForUpdates() {
-  if (!registration) return "offline";
-  try {
-    await registration.update();
-  } catch {
-    return "offline";
-  }
-  // Si hay una versión esperando (o se está instalando), muestra la barra de "Update".
-  const worker = registration.waiting || registration.installing;
-  if (worker) {
-    if (registration.waiting) showUpdate(registration.waiting);
-    else worker.addEventListener("statechange", () => worker.state === "installed" && showUpdate(worker));
-    return "updating";
-  }
-  return "latest";
 }
